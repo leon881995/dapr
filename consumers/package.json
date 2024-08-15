@@ -1,0 +1,16 @@
+{
+  "name": "consumers",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:dapr": "dapr run --app-port 5001 --app-id consumers --app-protocol http --dapr-http-port 3501 --resources-path components -- npm run start"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "description": "",
+  "dependencies": {
+    "@dapr/dapr": "^3.3.0"
+  }
+}

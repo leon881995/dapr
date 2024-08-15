@@ -1,0 +1,50 @@
+version: '3'
+services:
+  nodeapp:
+    build: .
+    ports:
+      - "50001:50001" # Dapr instances communicate over gRPC so we need to expose the gRPC port
+      - "3000:3000" # Expose the node app port
+    depends_on:
+      - redis
+      - placement
+      - mysql
+    networks:
+      - hello-dapr
+  nodeapp-dapr:
+    image: "daprio/daprd:latest"
+    command: [
+      "./daprd",
+      "--app-id", "nodeapp",
+      "--app-port", "3000",
+      "--placement-host-address", "placement:50006", # Dapr's placement service can be reach via the docker DNS entry
+      "--resources-path", "./components"
+    ]
+    volumes:
+      - "./components/:/components" # Mount our components folder for the runtime to use. The mounted location must match the --resources-path argument.
+    depends_on:
+      - nodeapp
+    network_mode: "service:nodeapp" # Attach the nodeapp-dapr service to the nodeapp network namespace
+  mysql:
+    image: "mysql:8.0"
+    ports:
+      - "8306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_DATABASE: "test"
+    networks:
+        - hello-dapr
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    networks:
+      - hello-dapr
+  placement:
+    image: "daprio/dapr"
+    command: ["./placement", "--port", "50006"]
+    ports:
+      - "50006:50006"
+
+networks:
+  hello-dapr: null
